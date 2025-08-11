@@ -1,0 +1,6 @@
+@tailwind base;@tailwind components;@tailwind utilities;
+:root { --cream:#FEEECC; --peach-sand:#F0CFA8; --maize:#D4A986; --tamarind-orange:#F19738; --chili-red:#D7430C; --clay-umber:#B77850; --burnt-sienna:#8A4D31; --cacao-brown:#57180F; }
+html, body { background: var(--cream); color: var(--cacao-brown); }
+.card { background: white; border-radius: 1rem; box-shadow: 0 8px 24px rgba(0,0,0,0.06); border: 1px solid var(--peach-sand); }
+.badge { display: inline-block; padding: 0.25rem 0.75rem; border-radius: 9999px; color: white; background: var(--chili-red); font-size: 0.75rem; font-weight: 600; }
+.kpi { composes: card; padding: 1rem; }

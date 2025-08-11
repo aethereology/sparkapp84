@@ -1,0 +1,10 @@
+steps:
+  - name: 'gcr.io/cloud-builders/gcloud'
+    entrypoint: 'bash'
+    args: [ -c, 'gcloud artifacts repositories create sparkapp84 --location=${_REGION} --repository-format=docker || true' ]
+  - name: 'gcr.io/cloud-builders/gcloud'
+    entrypoint: 'bash'
+    dir: api
+    args: [ -c, 'IMAGE="${_REGION}-docker.pkg.dev/$PROJECT_ID/sparkapp84/spark-api:${SHORT_SHA}"; gcloud builds submit --tag "$IMAGE" .; gcloud run deploy ${_API_SERVICE} --image "$IMAGE" --region ${_REGION} --platform managed --allow-unauthenticated' ]
+substitutions: { _REGION: us-central1, _API_SERVICE: spark-api }
+images: [ '${_REGION}-docker.pkg.dev/$PROJECT_ID/sparkapp84/spark-api:${SHORT_SHA}' ]

@@ -1,0 +1,29 @@
+version: "3.9"
+services:
+  redis:
+    image: redis:6-alpine
+    ports: ["6379:6379"]
+  api:
+    build: ./api
+    environment:
+      - ENV=local
+      - REDIS_URL=redis://redis:6379/0
+      - REDIS_MAX_CONNECTIONS=50
+      - REDIS_SOCKET_TIMEOUT=5
+      - EMAIL_PROVIDER=sendgrid
+      - SENDGRID_API_KEY=${SENDGRID_API_KEY}
+      - DATA_DIR=/app/data
+      - SPARK_ORG_NAME=SparkCreatives Inc.
+      - SPARK_EIN=${SPARK_EIN}
+      - SPARK_ADDR=${SPARK_ADDR}
+      - SPARK_VERIFY_BASE_URL=${SPARK_VERIFY_BASE_URL}
+      - SPARK_LOGO_PATH=/app/assets/logo.png
+    ports: ["8080:8080"]
+    depends_on: ["redis"]
+  web:
+    build: ./web
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8080
+      - NEXT_PUBLIC_BRAND_NAME=SparkCreatives Inc.
+    ports: ["3000:3000"]
+    depends_on: ["api"]

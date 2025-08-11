@@ -1,0 +1,1 @@
+export default function Home(){return(<div className="card p-8"><h1 className="text-2xl font-semibold mb-2">SparkCreatives — Reviewer & Donor Portal</h1><p className="opacity-80">Choose a section from the header to get started.</p></div>);}

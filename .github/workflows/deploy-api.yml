@@ -1,0 +1,32 @@
+name: Deploy API to Cloud Run
+on:
+  push: { branches: [ main ], paths: [ 'api/**', '.github/workflows/deploy-api.yml' ] }
+  workflow_dispatch:
+permissions: { contents: read, id-token: write }
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      SERVICE_NAME: ${{ secrets.GCP_CLOUD_RUN_SERVICE || 'spark-api' }}
+      REGION: ${{ secrets.GCP_REGION || 'us-central1' }}
+      PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+          token_format: 'access_token'
+      - uses: google-github-actions/setup-gcloud@v2
+      - name: Build & Push image (Artifact Registry)
+        run: |
+          IMAGE="us-docker.pkg.dev/${PROJECT_ID}/sparkapp84/spark-api:${{ github.sha }}"
+          gcloud artifacts repositories create sparkapp84 --repository-format=docker --location="$REGION" || true
+          gcloud builds submit --tag "$IMAGE" api
+      - name: Deploy to Cloud Run
+        run: |
+          IMAGE="us-docker.pkg.dev/${PROJECT_ID}/sparkapp84/spark-api:${{ github.sha }}"
+          VC_ARG=""; if [ -n "${{ secrets.GCP_VPC_CONNECTOR }}" ]; then VC_ARG="--vpc-connector=${{ secrets.GCP_VPC_CONNECTOR }} --egress-settings=all-traffic"; fi
+          REDIS_ARG=""; if [ -n "${{ secrets.REDIS_URL }}" ]; then REDIS_ARG="--set-env-vars REDIS_URL=${{ secrets.REDIS_URL }}"; fi
+          EXTRA_ENV="--set-env-vars WEBHOOK_RATE_LIMIT_PER_MINUTE=${{ secrets.WEBHOOK_RATE_LIMIT_PER_MINUTE || 100 }}"
+          gcloud run deploy "$SERVICE_NAME"             --image "$IMAGE" --region "$REGION" --platform managed --allow-unauthenticated             --set-env-vars "SPARK_ORG_NAME=SparkCreatives Inc.,SPARK_EIN=${{ secrets.SPARK_EIN }},SPARK_ADDR=${{ secrets.SPARK_ADDR }},SPARK_VERIFY_BASE_URL=${{ secrets.SPARK_VERIFY_BASE_URL }},SPARK_LOGO_PATH=/app/assets/logo.png"             --set-env-vars "EMAIL_PROVIDER=${{ secrets.EMAIL_PROVIDER }}"             --set-env-vars "FROM_EMAIL=${{ secrets.FROM_EMAIL }},FROM_NAME=${{ secrets.FROM_NAME }}"             --set-secrets "SENDGRID_API_KEY=SENDGRID_API_KEY:latest"             --set-secrets "POSTMARK_TOKEN=POSTMARK_TOKEN:latest"             --set-secrets "SQUARE_WEBHOOK_SIGNATURE_KEY=SQUARE_WEBHOOK_SIGNATURE_KEY:latest"             $REDIS_ARG $VC_ARG $EXTRA_ENV

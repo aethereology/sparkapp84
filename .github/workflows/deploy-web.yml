@@ -1,0 +1,29 @@
+name: Deploy Web to Cloud Run
+on:
+  push: { branches: [ main ], paths: [ 'web/**', '.github/workflows/deploy-web.yml' ] }
+  workflow_dispatch:
+permissions: { contents: read, id-token: write }
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      SERVICE_NAME: ${{ secrets.GCP_WEB_SERVICE || 'spark-web' }}
+      REGION: ${{ secrets.GCP_REGION || 'us-central1' }}
+      PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+          token_format: 'access_token'
+      - uses: google-github-actions/setup-gcloud@v2
+      - name: Build & Push image (Artifact Registry)
+        run: |
+          IMAGE="us-docker.pkg.dev/${PROJECT_ID}/sparkapp84/spark-web:${{ github.sha }}"
+          gcloud artifacts repositories create sparkapp84 --repository-format=docker --location="$REGION" || true
+          gcloud builds submit --tag "$IMAGE" web
+      - name: Deploy to Cloud Run (web)
+        run: |
+          IMAGE="us-docker.pkg.dev/${PROJECT_ID}/sparkapp84/spark-web:${{ github.sha }}"
+          gcloud run deploy "$SERVICE_NAME"             --image "$IMAGE" --region "$REGION" --platform managed --allow-unauthenticated             --set-env-vars "NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }},NEXT_PUBLIC_BRAND_NAME=SparkCreatives Inc."

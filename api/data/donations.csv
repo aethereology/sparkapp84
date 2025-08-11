@@ -1,0 +1,3 @@
+donation_id,org_id,donor_id,amount,currency,method,designation,restricted,received_at,square_payment_id,receipt_id,soft_credit_to,designation_breakdown
+gift_001,spark,d_1001,125.00,USD,square,Shipping Fund,yes,2025-08-01,sq_abc123,RCPT-2025-0001,BrightTech LLC,"Shipping Fund:125"
+gift_002,spark,d_1002,75.00,USD,square,General Fund,no,2025-08-02,sq_def456,,,"General Fund:75"
