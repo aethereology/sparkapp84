@@ -18,6 +18,11 @@ services:
       - SPARK_ADDR=${SPARK_ADDR}
       - SPARK_VERIFY_BASE_URL=${SPARK_VERIFY_BASE_URL}
       - SPARK_LOGO_PATH=/app/assets/logo.png
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY:-local-dev-secret-change-in-production}
+      - ACCESS_TOKEN_EXPIRE_MINUTES=30
+      - REFRESH_TOKEN_EXPIRE_DAYS=7
+      - CORS_ORIGINS=http://localhost:3000,http://localhost:8080
+      - ALLOWED_HOSTS=*
     ports: ["8080:8080"]
     depends_on: ["redis"]
   web:
