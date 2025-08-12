@@ -137,3 +137,14 @@ dist
 # Vite logs files
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
+
+# Python cache files
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyc
+api/__pycache__/
+api/*/__pycache__/
+
+# Claude Code configuration
+.claude/
